@@ -15,7 +15,6 @@ impl Ram {
 pub struct Registers {
     pub pc: u16,
     pub ir: u16,
-    pub stack: u16,
     pub delay_timer: u8,
     pub sound_timer: u8,
 
