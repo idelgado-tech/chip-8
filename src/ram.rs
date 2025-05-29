@@ -1,6 +1,24 @@
-use crate::display::Display;
+use crate::display::MachineDisplay;
 
 pub const RAM_SIZE: usize = 4 * 1024;
+const FONT_DATA: [u8; 80] = [
+    0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+    0x20, 0x60, 0x20, 0x20, 0x70, // 1
+    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+    0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+    0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+    0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+    0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+    0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+    0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+    0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+    0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+    0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+    0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+    0xF0, 0x80, 0xF0, 0x80, 0x80, // F
+];
 
 pub struct Ram {
     pub ram: Vec<u8>,
@@ -8,8 +26,63 @@ pub struct Ram {
 
 impl Ram {
     pub fn new() -> Ram {
-        Ram {
+        let mut ram = vec![0; 0x050];
+        ram.extend(FONT_DATA.iter());
+        ram.extend(vec![0; RAM_SIZE - 0x0A0].iter());
+
+        Ram { ram: ram }
+    }
+
+    pub fn read(&self, adress: u16) -> u8 {
+        self.ram[adress as usize]
+    }
+
+    pub fn write(&mut self, adress: u16, value: u8) {
+        self.ram[adress as usize] = value
+    }
+}
+
+mod test_ram {
+    use super::*;
+    use crate::registers::Registers;
+
+    #[test]
+    fn test_read_memory_from_empty() {
+        let mut ram = Ram {
             ram: vec![0; RAM_SIZE],
-        }
+        };
+        ram.ram[0x050] = 0xF0;
+        ram.ram[0x051] = 0x90;
+
+        assert_eq!(ram.read(0x050), 0xF0);
+        assert_eq!(ram.read(0x051), 0x90);
+    }
+
+    #[test]
+    fn test_new_ram() {
+        let ram = Ram::new();
+        assert_eq!(ram.read(0x04F), 0x00);
+        assert_eq!(ram.read(0x050), 0xF0);
+        assert_eq!(ram.read(0x051), 0x90);
+        assert_eq!(ram.read(0x09F), 0x80);
+        assert_eq!(ram.read(0x0A0), 0x00);
+        assert_eq!(ram.ram.len(), RAM_SIZE);
+    }
+
+    #[test]
+    fn test_write_ram() {
+        let mut ram = Ram::new();
+
+        assert_eq!(ram.read(0x04F), 0x00);
+        ram.write(0x04F, 0xF0);
+        assert_eq!(ram.read(0x04F), 0xF0);
+
+        assert_eq!(ram.read(0x050), 0xF0);
+        ram.write(0x050, 0x90);
+        assert_eq!(ram.read(0x050), 0x90);
+
+        assert_eq!(ram.read(0x09F), 0x80);
+        ram.write(0x09F, 0xF0);
+        assert_eq!(ram.read(0x09F), 0xF0);
     }
 }
