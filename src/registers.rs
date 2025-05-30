@@ -14,7 +14,7 @@ impl Registers {
         Registers {
             pc: 0,
             ir: 0,
-            stack: vec![0; 16],
+            stack: vec![],
             delay_timer: 0,
             sound_timer: 0,
             v_registers: [0; 16],
@@ -37,7 +37,7 @@ impl Registers {
     }
 
     pub fn pop_stack(&mut self) -> u16 {
-        self.stack.pop().unwrap_or(panic!("stack empty"))
+        self.stack.pop().unwrap_or_else(|| panic!("stack empty"))
     }
 }
 

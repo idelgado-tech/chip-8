@@ -95,7 +95,7 @@ impl Instruction {
         match code {
             _ => Self::SkipIfRegistersEquals(
                 extract_second_hex_digit(code),
-                extract_last_2_hex_digits(code),
+                extract_third_hex_digit(code),
             ), //5XY0
         }
     }
@@ -144,10 +144,18 @@ impl Instruction {
                 extract_second_hex_digit(code),
                 extract_third_hex_digit(code),
             ), //8XY5
+            6 => Self::ShiftRight(
+                extract_second_hex_digit(code),
+                extract_third_hex_digit(code),
+            ), //8XY6
             7 => Self::SubstractYX(
                 extract_second_hex_digit(code),
                 extract_third_hex_digit(code),
             ), //8XY7
+            0xE => Self::ShiftLeft(
+                extract_second_hex_digit(code),
+                extract_third_hex_digit(code),
+            ), //8XYE
             _ => todo!("not decodable"),
         }
     }
@@ -156,7 +164,7 @@ impl Instruction {
         match code {
             _ => Self::SkipIfRegistersNotEquals(
                 extract_second_hex_digit(code),
-                extract_last_2_hex_digits(code),
+                extract_third_hex_digit(code),
             ), //9XY0
         }
     }
@@ -257,7 +265,12 @@ pub fn execute_inst(machine: &mut Machine, instruction: Instruction) {
                 .set_pc(nnn + machine.registers.v_registers[0] as u16);
         }
         Instruction::CallSubroutine(subroutine_adress) => {
+            machine.registers.push_stack(machine.registers.pc);
             machine.registers.set_pc(subroutine_adress);
+        }
+        Instruction::ReturnSubroutine => {
+            let new_pc = machine.registers.pop_stack();
+            machine.registers.set_pc(new_pc);
         }
         Instruction::SetIndex(value) => {
             machine.registers.ir = value;
@@ -326,13 +339,13 @@ pub fn execute_inst(machine: &mut Machine, instruction: Instruction) {
             machine.registers.v_registers[0xf] = overflow as u8;
             machine.registers.v_registers[x as usize] = result;
         }
-        Instruction::ShiftLeft(x, y) => {
+        Instruction::ShiftLeft(x, _) => {
             machine.registers.v_registers[0xf] =
                 machine.registers.v_registers[x as usize] & 0x80 >> 7;
             machine.registers.v_registers[x as usize] =
                 machine.registers.v_registers[x as usize] << 1;
         } // prevoir istructions differentes pour COSMAC et SUPER-CHIP
-        Instruction::ShiftRight(x, y) => {
+        Instruction::ShiftRight(x, _) => {
             machine.registers.v_registers[0xf] = machine.registers.v_registers[x as usize] & 0x01;
             machine.registers.v_registers[x as usize] =
                 machine.registers.v_registers[x as usize] >> 1;
