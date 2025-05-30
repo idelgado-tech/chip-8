@@ -53,9 +53,10 @@ fn main() {
 
     // machine.display.print();
 
-    // let rom = rom::get_file_as_byte_vec(&"resources/IBM Logo.ch8".to_string());
-    // let rom = rom::get_file_as_byte_vec(&"resources/random_number_test.ch8".to_string());
-    let rom = rom::get_file_as_byte_vec(&"resources/test_opcode.ch8".to_string());
+    // let rom = rom::get_file_as_byte_vec(&"resources/1-chip8-logo.ch8".to_string());
+    // let rom = rom::get_file_as_byte_vec(&"resources/2-ibm-logo.ch8".to_string());
+    // let rom = rom::get_file_as_byte_vec(&"resources/3-corax+.ch8".to_string());
+    let rom = rom::get_file_as_byte_vec(&"resources/4-flags.ch8".to_string());
 
     // println!("START ROM");
     // rom::print_rom(&rom);
@@ -67,7 +68,6 @@ fn main() {
     // println!("START DECODE");
     // println!("{:?}", decode_all_instructions(&mut machine));
     // println!("END DECODE\n");
-
 
     // Limit to max ~60 fps update rate
     machine.update_screen();
