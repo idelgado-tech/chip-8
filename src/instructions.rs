@@ -3,7 +3,7 @@ use std::ops::Shl;
 use rand::Rng;
 
 use crate::{
-    display::{self, DISPLAY_X_SIZE},
+    display::{self, VRAM_WIDTH},
     hardware::Machine,
 };
 const INSTRUCTION_PAR_SEC: usize = 700;
@@ -306,6 +306,15 @@ pub fn execute_inst(machine: &mut Machine, instruction: Instruction) {
                 machine.registers.inc_pc(2);
             }
         }
+        Instruction::SkipIfKey(u8) => {}
+        Instruction::SkipIfNotKey(u8) => {}
+        Instruction::GetKey(u8) => {}
+        Instruction::AddToIndex(x) => {
+            machine.registers.ir += machine.registers.v_registers[x as usize] as u16;
+            if machine.registers.ir >= 0x1000 {
+                machine.registers.v_registers[0xf] = 1;
+            }
+        }
         Instruction::SetRegisterFrom(x, y) => {
             machine.registers.v_registers[x as usize] = machine.registers.v_registers[y as usize];
         }
@@ -403,11 +412,11 @@ pub fn execute_inst(machine: &mut Machine, instruction: Instruction) {
 
             for byte in 0..rows as u8 {
                 let y = (machine.registers.v_registers[register_y as usize] + byte)
-                    % display::DISPLAY_Y_SIZE as u8;
+                    % display::VRAM_HEIGTH as u8;
 
                 for bit in 0..8 {
                     let x = (machine.registers.v_registers[register_x as usize] + bit)
-                        % display::DISPLAY_X_SIZE as u8;
+                        % display::VRAM_WIDTH as u8;
 
                     let color =
                         (machine.ram.read(machine.registers.ir + byte as u16) >> (7 - bit)) & 1;
@@ -419,8 +428,6 @@ pub fn execute_inst(machine: &mut Machine, instruction: Instruction) {
             }
             machine.display.v_ram_changed = true;
         }
-
-        _ => todo!("Instruction not yet implemented : {:?} ", instruction),
     }
 }
 
