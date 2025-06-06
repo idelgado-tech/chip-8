@@ -9,7 +9,7 @@ use crate::instructions;
 use crate::ram::Ram;
 use crate::registers::Registers;
 
-pub const SLEEP_DURATION :Duration = Duration::from_millis(20);
+pub const SLEEP_DURATION :Duration = Duration::from_millis(2);
 
 pub struct Machine {
     pub display: MachineDisplay,
@@ -17,6 +17,7 @@ pub struct Machine {
     pub registers: Registers,
     pub window: Window,
 }
+//todo create loaded machine 
 
 impl Machine {
     pub fn new() -> Machine {

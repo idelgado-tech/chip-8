@@ -6,7 +6,7 @@ use crate::{
     display::{self, VRAM_WIDTH},
     hardware::Machine,
 };
-const INSTRUCTION_PAR_SEC: usize = 700;
+const INSTRUCTION_PAR_SEC: usize = 600;
 
 #[derive(Debug, PartialEq)]
 pub enum Instruction {
@@ -43,7 +43,7 @@ pub enum Instruction {
     SetIndexTofont(u8),               //FX29
     DecimalConversion(u8),            //FX33
     StoreMemory(u8),                  //FX55
-    LoadMemory(u8),                   //FX65
+    ReadMemory(u8),                   //FX65
     Display {
         //DXYN
         register_x: u8, //X
@@ -221,7 +221,7 @@ impl Instruction {
             0x29 => Self::SetIndexTofont(extract_second_hex_digit(code)),
             0x33 => Self::DecimalConversion(extract_second_hex_digit(code)),
             0x55 => Self::StoreMemory(extract_second_hex_digit(code)),
-            0x65 => Self::LoadMemory(extract_second_hex_digit(code)),
+            0x65 => Self::ReadMemory(extract_second_hex_digit(code)),
             _ => todo!("INSTRUCTION NOT yet decoded : {:#x}", code), //todo Better message
         }
     }
@@ -379,17 +379,18 @@ pub fn execute_inst(machine: &mut Machine, instruction: Instruction) {
             machine.ram.ram[index + 1] = number % 100 / 10;
             machine.ram.ram[index + 2] = number % 10;
         }
+
         // todo configuration old rules
-        Instruction::LoadMemory(x) => {
-            for register in 0..x as usize {
-                machine.ram.ram[machine.registers.ir as usize + register] =
-                    machine.registers.v_registers[register]
+        Instruction::ReadMemory(x) => {
+            for register in 0..=x as usize {
+                machine.registers.v_registers[register] =
+                    machine.ram.ram[machine.registers.ir as usize + register];
             }
         }
         Instruction::StoreMemory(x) => {
-            for register in 0..x as usize {
-                machine.registers.v_registers[register] =
-                    machine.ram.ram[machine.registers.ir as usize + register];
+            for register_reading in 0..=x as usize {
+                machine.ram.ram[machine.registers.ir as usize + register_reading] =
+                    machine.registers.v_registers[register_reading]
             }
         }
         Instruction::SetIndexTofont(x) => {
@@ -556,5 +557,28 @@ mod tests_instructions {
                 rows: 0xf
             }
         )
+    }
+
+    #[test]
+    fn Fx65_instruction_test() {
+        let mut machine = Machine::new();
+        let ir = 0x800;
+        let ir_u = ir as usize;
+        machine.registers.ir = ir;
+        machine.ram.ram[ir_u] = 45;
+        machine.ram.ram[ir_u + 1] = 46;
+        machine.ram.ram[ir_u + 2] = 47;
+        machine.ram.ram[ir_u + 3] = 48;
+        machine.ram.ram[ir_u + 4] = 49;
+        machine.ram.ram[ir_u + 5] = 50;
+
+        execute_inst(&mut machine, Instruction::ReadMemory(5));
+
+        assert_eq!(machine.registers.v_registers[0x0], 45);
+        assert_eq!(machine.registers.v_registers[0x1], 46);
+        assert_eq!(machine.registers.v_registers[0x2], 47);
+        assert_eq!(machine.registers.v_registers[0x3], 48);
+        assert_eq!(machine.registers.v_registers[0x4], 49);
+        assert_eq!(machine.registers.v_registers[0x5], 50);
     }
 }
